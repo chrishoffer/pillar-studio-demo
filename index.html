@@ -1,0 +1,1618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pillar Content Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&family=Inter+Tight:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&family=Inter+Tight:wght@400;500;600&display=swap"></noscript>
+<style>
+  :root {
+    --bone: #f5efe6;
+    --bone-soft: #fbf7f0;
+    --paper: #fefcf8;
+    --ink: #1a2420;
+    --ink-soft: #4a554f;
+    --ink-muted: #7a847e;
+    --sage: #3d5a47;
+    --sage-deep: #2a4035;
+    --sage-soft: #a8b9ae;
+    --terracotta: #b86442;
+    --gold: #c89b5a;
+    --line: #e0d8c8;
+    --line-soft: #ece5d5;
+    --display: 'Fraunces', 'Times New Roman', serif;
+    --body: 'Inter Tight', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bone);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  /* Subtle paper texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(184, 100, 66, 0.025) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(61, 90, 71, 0.03) 0%, transparent 50%);
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.4;
+    z-index: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 0.7 0 0 0 0 0.65 0 0 0 0 0.55 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 28px 32px 48px;
+  }
+
+  /* ───────── Top bar ───────── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0 28px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 40px;
+  }
+  .wordmark {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .wordmark-glyph {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--sage);
+    color: var(--bone-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--display);
+    font-size: 19px;
+    font-weight: 500;
+    font-style: italic;
+  }
+  .wordmark-text {
+    font-family: var(--display);
+    font-size: 19px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .wordmark-text em {
+    font-style: italic;
+    color: var(--sage);
+    font-weight: 400;
+  }
+  .topbar-meta {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-size: 12px;
+    color: var(--ink-muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .brain-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    transition: all 0.3s;
+  }
+  .brain-pill-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+  }
+  .brain-pill.loaded { border-color: rgba(61, 90, 71, 0.25); background: rgba(61, 90, 71, 0.05); }
+  .brain-pill.loaded .brain-pill-dot { background: var(--sage); animation: none; }
+  .brain-pill.error { border-color: rgba(184, 100, 66, 0.3); background: rgba(184, 100, 66, 0.06); color: var(--terracotta); }
+  .brain-pill.error .brain-pill-dot { background: var(--terracotta); animation: none; }
+
+  /* ───────── Hero band ───────── */
+  .hero {
+    margin-bottom: 56px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 48px;
+    align-items: end;
+  }
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 16px;
+    font-weight: 500;
+  }
+  .eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 24px;
+    height: 1px;
+    background: var(--ink-muted);
+    vertical-align: middle;
+    margin-right: 10px;
+    transform: translateY(-2px);
+  }
+  .hero h1 {
+    font-family: var(--display);
+    font-size: clamp(40px, 6vw, 64px);
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+    margin-bottom: 0;
+  }
+  .hero h1 em {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--sage);
+    font-variation-settings: 'SOFT' 100;
+  }
+  .hero-lede {
+    font-size: 14px;
+    color: var(--ink-soft);
+    max-width: 280px;
+    text-align: right;
+    line-height: 1.6;
+    padding-bottom: 8px;
+  }
+
+  /* ───────── Main grid ───────── */
+  .layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 48px;
+    align-items: start;
+  }
+
+  /* ───────── Sidebar nav ───────── */
+  .sidebar {
+    position: sticky;
+    top: 28px;
+  }
+  .nav-label {
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    font-weight: 600;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .nav-item {
+    background: none;
+    border: none;
+    text-align: left;
+    padding: 14px 16px;
+    cursor: pointer;
+    border-radius: 8px;
+    font-family: inherit;
+    color: var(--ink-soft);
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    position: relative;
+  }
+  .nav-item:hover {
+    background: var(--bone-soft);
+    color: var(--ink);
+  }
+  .nav-item.active {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .nav-item-title {
+    font-family: var(--display);
+    font-size: 17px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+  .nav-item.active .nav-item-title em {
+    font-style: italic;
+    color: var(--bone);
+  }
+  .nav-item-desc {
+    font-size: 11px;
+    color: var(--ink-muted);
+    letter-spacing: 0.02em;
+    line-height: 1.4;
+  }
+  .nav-item.active .nav-item-desc {
+    color: rgba(245, 239, 230, 0.55);
+  }
+
+  .sidebar-footnote {
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    font-size: 11px;
+    color: var(--ink-muted);
+    line-height: 1.55;
+    font-family: var(--display);
+    font-style: italic;
+  }
+
+  /* ───────── Main content area ───────── */
+  .main {
+    min-width: 0;
+  }
+  .panel-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .panel-title {
+    font-family: var(--display);
+    font-size: 32px;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .panel-title em {
+    font-style: italic;
+    color: var(--sage);
+    font-weight: 300;
+  }
+  .panel-number {
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--ink-muted);
+  }
+
+  /* ───────── Form ───────── */
+  .form {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 32px 36px;
+    margin-bottom: 28px;
+    position: relative;
+  }
+  .form::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 24px;
+    width: 60px;
+    height: 3px;
+    background: var(--sage);
+  }
+  .field {
+    margin-bottom: 24px;
+  }
+  .field:last-of-type {
+    margin-bottom: 28px;
+  }
+  .field-label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .field-label .req {
+    color: var(--terracotta);
+    margin-left: 3px;
+  }
+  .field-hint {
+    font-size: 13px;
+    color: var(--ink-muted);
+    margin-bottom: 12px;
+    font-family: var(--display);
+    font-style: italic;
+    line-height: 1.45;
+  }
+  input[type="text"], textarea {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid var(--line);
+    background: transparent;
+    padding: 8px 0 10px;
+    font-family: var(--body);
+    font-size: 16px;
+    color: var(--ink);
+    transition: border-color 0.2s;
+  }
+  input[type="text"]::placeholder, textarea::placeholder {
+    color: var(--ink-muted);
+    opacity: 0.6;
+  }
+  input[type="text"]:focus, textarea:focus {
+    outline: none;
+    border-bottom-color: var(--sage);
+  }
+
+  /* Pill option group */
+  .pill-group {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .pill {
+    background: var(--bone-soft);
+    border: 1px solid var(--line);
+    padding: 16px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .pill:hover {
+    background: var(--paper);
+    border-color: var(--sage-soft);
+  }
+  .pill.active {
+    background: var(--sage-deep);
+    border-color: var(--sage-deep);
+    color: var(--bone-soft);
+  }
+  .pill-value {
+    font-family: var(--display);
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .pill.active .pill-value { color: var(--bone-soft); }
+  .pill-meta {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    font-weight: 500;
+  }
+  .pill.active .pill-meta { color: var(--sage-soft); }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line-soft);
+  }
+  .btn-primary {
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 13px 32px;
+    font-family: var(--body);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .btn-primary:hover {
+    background: var(--sage-deep);
+    transform: translateY(-1px);
+  }
+  .btn-primary:disabled {
+    background: var(--ink-muted);
+    cursor: not-allowed;
+    transform: none;
+  }
+  .btn-primary-arrow {
+    font-family: var(--display);
+    font-style: italic;
+    transition: transform 0.2s;
+  }
+  .btn-primary:hover .btn-primary-arrow {
+    transform: translateX(3px);
+  }
+  .btn-secondary {
+    background: none;
+    color: var(--ink-soft);
+    border: none;
+    padding: 13px 8px;
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-color: var(--line);
+    text-decoration-thickness: 1px;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover {
+    color: var(--ink);
+    text-decoration-color: var(--sage);
+  }
+
+  /* ───────── Output ───────── */
+  .output-section {
+    margin-top: 8px;
+  }
+  .output-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .output-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    font-weight: 600;
+  }
+  .view-toggle {
+    display: inline-flex;
+    gap: 0;
+    font-size: 11px;
+  }
+  .view-toggle button {
+    background: none;
+    border: none;
+    padding: 4px 10px;
+    font-family: inherit;
+    color: var(--ink-muted);
+    cursor: pointer;
+    border-bottom: 1px solid transparent;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-size: 10px;
+    font-weight: 600;
+    transition: all 0.15s;
+  }
+  .view-toggle button.active {
+    color: var(--ink);
+    border-bottom-color: var(--sage);
+  }
+
+  .output {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 40px 44px;
+    min-height: 180px;
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--ink);
+    white-space: pre-wrap;
+    position: relative;
+  }
+  .output.empty {
+    color: var(--ink-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 60px 44px;
+    background:
+      linear-gradient(var(--paper), var(--paper)) padding-box,
+      repeating-linear-gradient(45deg, transparent 0 8px, var(--line-soft) 8px 9px) border-box;
+    border: 1px solid transparent;
+  }
+  .empty-glyph {
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 38px;
+    color: var(--sage-soft);
+    margin-bottom: 14px;
+    font-weight: 300;
+  }
+  .empty-text {
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 17px;
+    color: var(--ink-soft);
+    max-width: 340px;
+    line-height: 1.5;
+  }
+  .output.loading {
+    color: var(--ink-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 44px;
+  }
+  .loading-bars {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+  }
+  .loading-bar {
+    width: 3px;
+    height: 24px;
+    background: var(--sage-soft);
+    border-radius: 2px;
+    animation: barPulse 1.2s ease-in-out infinite;
+  }
+  .loading-bar:nth-child(1) { animation-delay: 0s; }
+  .loading-bar:nth-child(2) { animation-delay: 0.1s; }
+  .loading-bar:nth-child(3) { animation-delay: 0.2s; }
+  .loading-bar:nth-child(4) { animation-delay: 0.3s; }
+  .loading-bar:nth-child(5) { animation-delay: 0.4s; }
+  @keyframes barPulse {
+    0%, 100% { transform: scaleY(0.4); opacity: 0.5; }
+    50% { transform: scaleY(1); opacity: 1; }
+  }
+  .loading-text {
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 15px;
+  }
+
+  /* Output footer */
+  .output-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line-soft);
+  }
+  .output-meta {
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--ink-muted);
+  }
+  .output-meta strong {
+    color: var(--sage-deep);
+    font-weight: 500;
+    font-style: normal;
+    font-family: var(--body);
+  }
+  .output-actions-group {
+    display: flex;
+    gap: 8px;
+  }
+  .icon-btn {
+    background: var(--bone-soft);
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    padding: 7px 14px;
+    font-family: inherit;
+    font-size: 12px;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.02em;
+  }
+  .icon-btn:hover {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+
+  /* ───────── Platform Previews ───────── */
+  .preview-shell {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 32px;
+    min-height: 180px;
+  }
+  .preview-label {
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--line);
+  }
+
+  /* Google Ads preview */
+  .google-ads-frame {
+    max-width: 600px;
+    margin: 0 auto;
+    font-family: arial, sans-serif;
+  }
+  .google-search-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 16px;
+    border: 1px solid #dfe1e5;
+    border-radius: 24px;
+    margin-bottom: 22px;
+    font-size: 14px;
+    color: #5f6368;
+    background: white;
+  }
+  .g-logo { font-weight: 500; font-size: 13px; color: #4285f4; }
+  .ad-result { padding: 14px 0; }
+  .ad-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #000;
+    margin-right: 8px;
+    border: 1px solid #000;
+    padding: 0 4px;
+    border-radius: 3px;
+    vertical-align: middle;
+  }
+  .ad-url { font-size: 13px; color: #202124; display: inline-block; vertical-align: middle; }
+  .ad-url-domain { color: #5f6368; }
+  .ad-headline {
+    font-size: 18px;
+    color: #1a0dab;
+    margin: 4px 0 2px;
+    line-height: 1.3;
+    cursor: pointer;
+  }
+  .ad-headline:hover { text-decoration: underline; }
+  .ad-description { font-size: 13px; color: #4d5156; line-height: 1.45; }
+  .ad-extensions { margin-top: 8px; font-size: 12px; color: #1a0dab; }
+  .ad-extensions span { margin-right: 14px; }
+  .headlines-list {
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px dashed var(--line);
+  }
+  .headlines-list-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--ink-muted);
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+  .headline-pill {
+    display: inline-block;
+    background: var(--bone-soft);
+    color: var(--ink);
+    padding: 5px 12px;
+    border-radius: 100px;
+    font-size: 12px;
+    margin: 3px 4px 3px 0;
+    border: 1px solid var(--line);
+  }
+  .headline-pill .char-count {
+    color: var(--ink-muted);
+    font-size: 10px;
+    margin-left: 6px;
+    font-family: var(--display);
+    font-style: italic;
+  }
+
+  /* Instagram preview */
+  .ig-frame {
+    max-width: 470px;
+    margin: 0 auto;
+    border: 1px solid #dbdbdb;
+    border-radius: 8px;
+    background: #ffffff;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    overflow: hidden;
+  }
+  .ig-header {
+    display: flex;
+    align-items: center;
+    padding: 12px 14px;
+    border-bottom: 1px solid #efefef;
+  }
+  .ig-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--sage) 0%, var(--sage-soft) 100%);
+    color: var(--bone-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 14px;
+    font-weight: 500;
+    margin-right: 10px;
+  }
+  .ig-username { font-size: 14px; font-weight: 600; color: #262626; }
+  .ig-image {
+    background:
+      linear-gradient(135deg, var(--bone) 0%, var(--bone-soft) 50%, #ece5d5 100%);
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-muted);
+    font-size: 13px;
+    font-family: var(--display);
+    font-style: italic;
+    padding: 20px;
+    text-align: center;
+  }
+  .ig-actions {
+    display: flex;
+    gap: 14px;
+    padding: 12px 14px 4px;
+    font-size: 22px;
+    color: #262626;
+  }
+  .ig-likes {
+    padding: 0 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #262626;
+    margin-bottom: 4px;
+  }
+  .ig-caption {
+    padding: 4px 14px 16px;
+    font-size: 14px;
+    color: #262626;
+    line-height: 1.45;
+    white-space: pre-wrap;
+  }
+  .ig-caption-username { font-weight: 600; margin-right: 5px; }
+  .ig-hashtags { color: #00376b; margin-top: 8px; display: block; }
+
+  /* Email preview */
+  .email-frame {
+    max-width: 560px;
+    margin: 0 auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: #ffffff;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  .email-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    background: #fafafa;
+  }
+  .email-subject {
+    font-size: 16px;
+    font-weight: 600;
+    color: #202124;
+    margin-bottom: 4px;
+  }
+  .email-preview-text {
+    font-size: 12px;
+    color: #5f6368;
+    margin-bottom: 10px;
+  }
+  .email-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: #5f6368;
+  }
+  .email-meta .from { color: #202124; font-weight: 500; }
+  .email-meta .avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--sage) 0%, var(--sage-soft) 100%);
+    color: var(--bone-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .email-body {
+    padding: 26px 28px;
+    font-size: 15px;
+    line-height: 1.65;
+    color: #2a2a2a;
+    white-space: pre-wrap;
+  }
+  .email-footer {
+    padding: 16px 24px;
+    background: #fafafa;
+    border-top: 1px solid #f0f0f0;
+    font-size: 11px;
+    color: var(--ink-muted);
+    text-align: center;
+    letter-spacing: 0.04em;
+  }
+
+  /* Blog markdown styling */
+  .output h1, .output h2, .output h3 {
+    font-family: var(--display);
+    font-weight: 400;
+    color: var(--ink);
+    line-height: 1.2;
+    margin: 1.4em 0 0.5em;
+  }
+  .output h1 { font-size: 32px; letter-spacing: -0.02em; margin-top: 0; }
+  .output h2 { font-size: 22px; letter-spacing: -0.01em; }
+  .output h3 { font-size: 18px; }
+  .output p { margin-bottom: 1em; }
+  .output ul, .output ol { margin: 0.5em 0 1em 1.5em; }
+  .output li { margin-bottom: 0.4em; }
+  .output strong { font-weight: 600; color: var(--ink); }
+  .output em { font-style: italic; }
+
+  /* Footer */
+  .app-footer {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 11px;
+    color: var(--ink-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .app-footer em {
+    font-family: var(--display);
+    font-style: italic;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 12px;
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .app { padding: 20px 18px 36px; }
+    .layout { grid-template-columns: 1fr; gap: 32px; }
+    .sidebar { position: static; }
+    .nav { flex-direction: row; flex-wrap: wrap; gap: 6px; }
+    .nav-item { flex: 1 1 calc(50% - 3px); padding: 12px 14px; min-width: 140px; }
+    .nav-item-desc { display: none; }
+    .hero { grid-template-columns: 1fr; gap: 16px; }
+    .hero-lede { text-align: left; max-width: 100%; }
+    .topbar-meta { display: none; }
+    .form { padding: 24px 22px; }
+    .panel-title { font-size: 26px; }
+    .output { padding: 28px 22px; }
+    .pill-group { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="wordmark">
+      <div class="wordmark-glyph">P</div>
+      <div class="wordmark-text">Pillar <em>Content Studio</em></div>
+    </div>
+    <div class="topbar-meta">
+      <div class="brain-pill" id="brain-pill">
+        <span class="brain-pill-dot" id="brain-pill-dot"></span>
+        <span id="brain-pill-text">Loading Brain</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div>
+      <div class="eyebrow">A private tool for Pillar</div>
+      <h1>Drafts in your <em>voice</em>,<br>in seconds.</h1>
+    </div>
+    <div class="hero-lede">
+      Choose what you'd like to draft, fill in a few details, and the Studio writes it the way Pillar speaks.
+    </div>
+  </div>
+
+  <!-- Main layout -->
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="nav-label">Choose a format</div>
+      <div class="nav" id="nav"></div>
+      <div class="sidebar-footnote">
+        Each draft is generated using Pillar's Brand Brain — a living document of your voice, audience, and care philosophy.
+      </div>
+    </aside>
+
+    <!-- Main panel -->
+    <main class="main">
+      <div class="panel-header">
+        <div class="panel-title" id="panel-title">Blog <em>post</em></div>
+        <div class="panel-number" id="panel-number">No. 01</div>
+      </div>
+
+      <div class="form" id="form-area"></div>
+
+      <div class="output-section">
+        <div class="output-header">
+          <div class="output-eyebrow" id="output-eyebrow">Your draft</div>
+          <div class="view-toggle" id="view-toggle" style="display:none;">
+            <button class="active" data-view="preview" onclick="setView('preview')">Preview</button>
+            <button data-view="raw" onclick="setView('raw')">Raw text</button>
+          </div>
+        </div>
+
+        <div class="output empty" id="output">
+          <div class="empty-glyph">✦</div>
+          <div class="empty-text">Fill in the details and your draft will appear here.</div>
+        </div>
+
+        <div class="output-footer" id="output-footer" style="display:none;">
+          <div class="output-meta" id="output-meta"></div>
+          <div class="output-actions-group">
+            <button class="icon-btn" onclick="copyOutput()" id="copy-btn">Copy</button>
+            <button class="icon-btn" onclick="regenerate()">Regenerate</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <div class="app-footer">
+    <span>Built & maintained by HDMC</span>
+    <em>Private to Pillar Pelvic Health</em>
+  </div>
+
+</div>
+
+<script>
+const BRAIN_URL = "https://gist.githubusercontent.com/chrishoffer/f4f069e46ba103a976fa30832aa09208/raw/gistfile1.txt";
+const WORKER_URL = "https://pillar-content-studio.hofferdmc.workers.dev";
+
+const FALLBACK_VOICE = `You are writing for Pillar Pelvic Health, a boutique pelvic floor physical therapy clinic in Cincinnati. Write in a warm, calm, knowledgeable voice — like a trusted friend who happens to be an expert. Use plain, inclusive language. Avoid hype, fear-based framing, and clinical coldness. Never give specific medical advice; always invite the reader to book a consultation for personal guidance.`;
+
+let BRAND_VOICE = FALLBACK_VOICE;
+let brainLoaded = false;
+
+async function loadBrain() {
+  const pill = document.getElementById('brain-pill');
+  const pillText = document.getElementById('brain-pill-text');
+  try {
+    const response = await fetch(`${BRAIN_URL}?t=${Date.now()}`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const text = await response.text();
+    if (!text || text.trim().length < 100) throw new Error('Empty');
+    BRAND_VOICE = text;
+    brainLoaded = true;
+    pill.classList.add('loaded');
+    pillText.textContent = 'Brain loaded';
+  } catch (err) {
+    pill.classList.add('error');
+    pillText.textContent = 'Brain error — using fallback';
+  }
+}
+
+const TOOLS = {
+  blog: {
+    label: 'Blog post',
+    title: 'Blog <em>post</em>',
+    desc: 'Long-form, SEO-ready',
+    panelNumber: 'No. 01',
+    fields: [
+      { key: 'topic', label: 'Topic', type: 'input', placeholder: 'e.g. Why postpartum runners need pelvic floor PT', hint: 'What is the blog post about?', required: true },
+      { key: 'audience', label: 'Who it\'s for', type: 'input', placeholder: 'e.g. New moms returning to running', hint: 'Optional — who specifically is reading this?' },
+      {
+        key: 'length',
+        label: 'Length',
+        type: 'pills',
+        hint: 'Choose the post length. Longer posts give more SEO depth.',
+        options: [
+          { value: '500', label: '500', meta: 'Quick read' },
+          { value: '1000', label: '1,000', meta: 'Standard' },
+          { value: '2000', label: '2,000', meta: 'In-depth SEO' }
+        ],
+        default: '1000'
+      }
+    ],
+    prompt: (f) => {
+      const wc = parseInt(f.length || '1000', 10);
+      let structure;
+      if (wc <= 500) {
+        structure = `Structure: A short, punchy blog post (~500 words total). Include:
+- A warm hook (2-3 sentences)
+- 2-3 body paragraphs covering the most important points
+- A closing paragraph with a soft CTA inviting them to book a consultation or reach out`;
+      } else if (wc <= 1000) {
+        structure = `Structure: A standard blog post (~1,000 words total). Include:
+- An H1 title (compelling, SEO-friendly, includes target keywords naturally)
+- A warm hook intro (2-3 short paragraphs)
+- 3-4 H2 subheadings, each with 1-2 paragraphs of content
+- A closing paragraph with a clear but soft CTA
+Format in markdown.`;
+      } else {
+        structure = `Structure: An in-depth, SEO-optimized blog post (~2,000 words total). Include:
+- An H1 title (compelling, SEO-friendly, includes target keywords naturally)
+- A warm hook intro (3-4 short paragraphs)
+- 5-7 H2 subheadings covering the topic in depth, each with 2-3 paragraphs
+- Where helpful, use H3 subheadings or short bulleted lists
+- A "When to see a pelvic floor PT" or similar practical section toward the end
+- A closing paragraph with a clear but soft CTA inviting consultation
+- Naturally weave in local Cincinnati relevance where it fits
+Format in markdown.`;
+      }
+      return `Write a complete blog post for Pillar Pelvic Health.
+
+Topic: ${f.topic}
+${f.audience ? `Target reader: ${f.audience}` : ''}
+Target length: approximately ${wc} words
+
+${structure}
+
+Stay true to Pillar's voice — warm, calm, knowledgeable, plain-language, no hype, no fear-based framing. Never give specific medical advice; frame everything as general education and invite the reader to book a consultation for personalized guidance. Do not use real patient stories.`;
+    }
+  },
+  instagram: {
+    label: 'Instagram caption',
+    title: 'Instagram <em>caption</em>',
+    desc: 'Captions with hashtags',
+    panelNumber: 'No. 02',
+    structured: true,
+    fields: [
+      { key: 'topic', label: 'What\'s the post about?', type: 'input', placeholder: 'e.g. Pelvic floor isn\'t just kegels', hint: 'The core message of the post', required: true },
+      { key: 'cta', label: 'Call to action', type: 'input', placeholder: 'e.g. DM us to book a consult', hint: 'What do you want them to do?' }
+    ],
+    prompt: (f) => `Write an Instagram caption for Pillar Pelvic Health.
+
+Topic: ${f.topic}
+CTA: ${f.cta || 'Book a free consultation — link in bio'}
+
+Return ONLY valid JSON in this exact format, no markdown, no preamble:
+{
+  "hook": "Strong opening line — one sentence, attention-grabbing",
+  "body": "2-4 short paragraphs separated by blank lines. Conversational but informative.",
+  "cta": "Closing CTA line",
+  "hashtags": ["hashtag1", "hashtag2", "hashtag3", "hashtag4", "hashtag5"],
+  "imageIdea": "One short sentence describing what the post image should show"
+}
+
+Keep total caption length (hook + body + cta) under 200 words. Include 5-8 hashtags without the # symbol.`
+  },
+  faq: {
+    label: 'Patient FAQ',
+    title: 'Patient <em>FAQ</em>',
+    desc: 'Reassuring answers',
+    panelNumber: 'No. 03',
+    fields: [
+      { key: 'question', label: 'The question', type: 'input', placeholder: 'e.g. Does pelvic floor PT hurt?', hint: 'A real question patients ask', required: true }
+    ],
+    prompt: (f) => `Write a clear, reassuring FAQ answer for Pillar Pelvic Health's website.
+
+Question: ${f.question}
+
+Format: 2-4 short paragraphs. Answer the question directly and honestly. Acknowledge any worry the patient might have. Use plain language. End by inviting them to reach out with more questions or book a consult. Do not give specific medical advice — keep it general and educational.`
+  },
+  ads: {
+    label: 'Google Ads',
+    title: 'Google <em>Ads</em>',
+    desc: 'Headlines and previews',
+    panelNumber: 'No. 04',
+    structured: true,
+    fields: [
+      { key: 'focus', label: 'Service or condition', type: 'input', placeholder: 'e.g. Postpartum recovery', hint: 'What is this ad campaign promoting?', required: true },
+      { key: 'angle', label: 'Angle', type: 'input', placeholder: 'e.g. For moms returning to exercise', hint: 'Optional — specific hook or audience angle' }
+    ],
+    prompt: (f) => `Generate Google Ads content for Pillar Pelvic Health.
+
+Focus: ${f.focus}
+${f.angle ? `Angle: ${f.angle}` : ''}
+
+Return ONLY valid JSON in this exact format, no markdown, no preamble:
+{
+  "featuredAd": {
+    "headline1": "Primary headline (max 30 chars)",
+    "headline2": "Secondary headline (max 30 chars)",
+    "headline3": "Tertiary headline (max 30 chars)",
+    "description1": "Description line 1 (max 90 chars)",
+    "description2": "Description line 2 (max 90 chars)",
+    "displayUrl": "pillarpelvichealth.com/path",
+    "sitelinks": ["Sitelink 1", "Sitelink 2", "Sitelink 3", "Sitelink 4"]
+  },
+  "additionalHeadlines": [
+    "Headline option 1",
+    "Headline option 2",
+    "Headline option 3",
+    "Headline option 4",
+    "Headline option 5",
+    "Headline option 6",
+    "Headline option 7"
+  ]
+}
+
+CRITICAL: Every headline must be 30 characters or fewer. Every description must be 90 characters or fewer. Sitelinks must be 25 characters or fewer. Stay calm and professional — no hype, no clickbait. Mix pain-point hooks, benefit-focused, location-specific (Cincinnati), and direct CTAs.`
+  },
+  email: {
+    label: 'Email newsletter',
+    title: 'Email <em>newsletter</em>',
+    desc: 'Short, warm emails',
+    panelNumber: 'No. 05',
+    structured: true,
+    fields: [
+      { key: 'topic', label: 'Newsletter topic', type: 'input', placeholder: 'e.g. Three signs your pelvic floor needs attention', hint: 'Main theme of this email', required: true },
+      { key: 'goal', label: 'Goal of the email', type: 'input', placeholder: 'e.g. Educate + drive consult bookings', hint: 'What should this email accomplish?' }
+    ],
+    prompt: (f) => `Write a short email newsletter for Pillar Pelvic Health.
+
+Topic: ${f.topic}
+Goal: ${f.goal || 'Educate readers and gently drive consultation bookings'}
+
+Return ONLY valid JSON in this exact format, no markdown, no preamble:
+{
+  "subject": "Compelling subject line, not clickbait",
+  "previewText": "One sentence preview text shown in inbox",
+  "fromName": "The Pillar Team",
+  "fromEmail": "hello@pillarpelvichealth.com",
+  "greeting": "Hi friend,",
+  "body": "3-5 short paragraphs of content separated by blank lines. Conversational, warm, helpful.",
+  "cta": "Clear but soft call to action sentence",
+  "signoff": "Warmly,\\nThe Pillar Team"
+}
+
+Total length of body + cta should be under 250 words.`
+  }
+};
+
+let currentTool = 'blog';
+let lastOutput = '';
+let lastFields = {};
+let lastStructured = null;
+let currentView = 'preview';
+
+// Render nav
+function renderNav() {
+  const nav = document.getElementById('nav');
+  nav.innerHTML = Object.entries(TOOLS).map(([key, tool]) => `
+    <button class="nav-item ${key === currentTool ? 'active' : ''}" data-tool="${key}" onclick="selectTool('${key}')">
+      <div class="nav-item-title">${tool.title}</div>
+      <div class="nav-item-desc">${tool.desc}</div>
+    </button>
+  `).join('');
+}
+
+function selectTool(key) {
+  currentTool = key;
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.tool === key));
+  document.getElementById('panel-title').innerHTML = TOOLS[key].title;
+  document.getElementById('panel-number').textContent = TOOLS[key].panelNumber;
+  renderForm(key);
+  const out = document.getElementById('output');
+  out.className = 'output empty';
+  out.innerHTML = '<div class="empty-glyph">✦</div><div class="empty-text">Fill in the details and your draft will appear here.</div>';
+  document.getElementById('output-footer').style.display = 'none';
+  document.getElementById('view-toggle').style.display = 'none';
+  lastStructured = null;
+  currentView = 'preview';
+}
+
+function renderForm(toolKey) {
+  const tool = TOOLS[toolKey];
+  const area = document.getElementById('form-area');
+  area.innerHTML = tool.fields.map(f => {
+    if (f.type === 'pills') {
+      const defaultVal = f.default || (f.options[0] && f.options[0].value);
+      return `
+        <div class="field">
+          <label class="field-label">${f.label}</label>
+          ${f.hint ? `<div class="field-hint">${f.hint}</div>` : ''}
+          <div class="pill-group" data-field-key="${f.key}">
+            ${f.options.map(opt => `
+              <button type="button" class="pill ${opt.value === defaultVal ? 'active' : ''}" data-value="${opt.value}" onclick="selectPill('${f.key}', '${opt.value}')">
+                <span class="pill-value">${opt.label}</span>
+                ${opt.meta ? `<span class="pill-meta">${opt.meta}</span>` : ''}
+              </button>
+            `).join('')}
+          </div>
+          <input type="hidden" id="field-${f.key}" value="${defaultVal}">
+        </div>
+      `;
+    }
+    return `
+      <div class="field">
+        <label class="field-label">${f.label}${f.required ? '<span class="req">*</span>' : ''}</label>
+        ${f.hint ? `<div class="field-hint">${f.hint}</div>` : ''}
+        <input type="text" id="field-${f.key}" placeholder="${f.placeholder || ''}">
+      </div>
+    `;
+  }).join('') + `
+    <div class="controls">
+      <button class="btn-primary" id="generate-btn" onclick="generate()">
+        Generate draft <span class="btn-primary-arrow">→</span>
+      </button>
+      <button class="btn-secondary" onclick="fillExample()">Try an example</button>
+    </div>
+  `;
+}
+
+function selectPill(fieldKey, value) {
+  const group = document.querySelector(`.pill-group[data-field-key="${fieldKey}"]`);
+  if (!group) return;
+  group.querySelectorAll('.pill').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.value === value);
+  });
+  document.getElementById(`field-${fieldKey}`).value = value;
+}
+
+function fillExample() {
+  const examples = {
+    blog: { topic: 'Why your pelvic floor matters after a C-section', audience: 'New moms 6 weeks postpartum', length: '1000' },
+    instagram: { topic: 'Leaking when you sneeze isn\'t something you have to live with', cta: 'DM us "consult" to learn more' },
+    faq: { question: 'Is pelvic floor PT covered by insurance?' },
+    ads: { focus: 'Postpartum pelvic floor recovery', angle: 'For Cincinnati moms 6+ weeks postpartum' },
+    email: { topic: 'Three things to know about pelvic floor health in your 40s', goal: 'Educate perimenopausal women and invite them to book a consult' }
+  };
+  const ex = examples[currentTool];
+  if (!ex) return;
+  Object.entries(ex).forEach(([key, val]) => {
+    const input = document.getElementById(`field-${key}`);
+    if (input) {
+      input.value = val;
+      const pillGroup = document.querySelector(`.pill-group[data-field-key="${key}"]`);
+      if (pillGroup) {
+        pillGroup.querySelectorAll('.pill').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.value === val);
+        });
+      }
+    }
+  });
+}
+
+async function generate() {
+  const tool = TOOLS[currentTool];
+  const fields = {};
+  tool.fields.forEach(f => {
+    fields[f.key] = document.getElementById(`field-${f.key}`).value.trim();
+  });
+
+  if (!fields[tool.fields[0].key]) {
+    const out = document.getElementById('output');
+    out.className = 'output empty';
+    out.innerHTML = `<div class="empty-glyph">!</div><div class="empty-text">Please fill in "${tool.fields[0].label}" to continue.</div>`;
+    return;
+  }
+
+  lastFields = { ...fields };
+  currentView = 'preview';
+  document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
+  const previewBtn = document.querySelector('.view-toggle button[data-view="preview"]');
+  if (previewBtn) previewBtn.classList.add('active');
+
+  const out = document.getElementById('output');
+  const btn = document.getElementById('generate-btn');
+  out.className = 'output loading';
+  out.innerHTML = `
+    <div class="loading-bars">
+      <div class="loading-bar"></div><div class="loading-bar"></div><div class="loading-bar"></div><div class="loading-bar"></div><div class="loading-bar"></div>
+    </div>
+    <div class="loading-text">Drafting in your voice…</div>
+  `;
+  document.getElementById('output-footer').style.display = 'none';
+  btn.disabled = true;
+  btn.innerHTML = 'Generating… <span class="btn-primary-arrow">→</span>';
+
+  let maxTokens = 1500;
+  if (currentTool === 'blog') {
+    const wc = parseInt(fields.length || '1000', 10);
+    if (wc >= 2000) maxTokens = 4000;
+    else if (wc >= 1000) maxTokens = 2200;
+    else maxTokens = 1200;
+  }
+
+  try {
+    const response = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: maxTokens,
+        system: BRAND_VOICE,
+        messages: [{ role: "user", content: tool.prompt(fields) }]
+      })
+    });
+
+    if (!response.ok) throw new Error(`API returned ${response.status}`);
+
+    const data = await response.json();
+    const text = data.content
+      .filter(item => item.type === 'text')
+      .map(item => item.text)
+      .join('\n');
+
+    lastOutput = text;
+
+    if (tool.structured) {
+      const cleaned = text.replace(/```json|```/g, '').trim();
+      try {
+        lastStructured = JSON.parse(cleaned);
+        renderPreview(currentTool, lastStructured);
+      } catch (parseErr) {
+        lastStructured = null;
+        out.className = 'output';
+        out.textContent = text;
+      }
+    } else {
+      lastStructured = null;
+      out.className = 'output';
+      // For blog, render markdown lightly
+      if (currentTool === 'blog') {
+        out.innerHTML = renderMarkdown(text);
+      } else {
+        out.textContent = text;
+      }
+    }
+
+    document.getElementById('output-footer').style.display = 'flex';
+    updateMeta();
+    updateViewToggle();
+  } catch (err) {
+    out.className = 'output empty';
+    out.innerHTML = `<div class="empty-glyph">⚠</div><div class="empty-text">Something went wrong: ${err.message}. Try again in a moment.</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Generate draft <span class="btn-primary-arrow">→</span>';
+  }
+}
+
+// Minimal markdown renderer for blog output
+function renderMarkdown(md) {
+  let html = md
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  // Bullet lists
+  html = html.replace(/(^|\n)- (.+)/g, (m, p1, p2) => `${p1}<li>${p2}</li>`);
+  html = html.replace(/(<li>.*<\/li>\n?)+/g, m => `<ul>${m}</ul>`);
+  // Paragraphs
+  html = html.split(/\n\n+/).map(block => {
+    if (/^<(h1|h2|h3|ul|ol)/.test(block.trim())) return block;
+    if (!block.trim()) return '';
+    return `<p>${block.replace(/\n/g, '<br>')}</p>`;
+  }).join('\n');
+  return html;
+}
+
+function updateMeta() {
+  const metaEl = document.getElementById('output-meta');
+  if (!metaEl) return;
+  const toolLabel = TOOLS[currentTool].label;
+  let textForCount = lastStructured ? structuredToText(currentTool, lastStructured) : lastOutput;
+  const cleanedForCount = textForCount.replace(/[#*_`>\[\]()]/g, '').replace(/\s+/g, ' ').trim();
+  const wordCount = cleanedForCount ? cleanedForCount.split(' ').length : 0;
+  metaEl.innerHTML = `<strong>${toolLabel}</strong> · approximately ${wordCount.toLocaleString()} words`;
+}
+
+function updateViewToggle() {
+  const toggle = document.getElementById('view-toggle');
+  toggle.style.display = lastStructured ? 'inline-flex' : 'none';
+}
+
+function setView(view) {
+  currentView = view;
+  document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.view-toggle button[data-view="${view}"]`).classList.add('active');
+  if (view === 'preview' && lastStructured) {
+    renderPreview(currentTool, lastStructured);
+  } else {
+    renderRaw();
+  }
+}
+
+function renderRaw() {
+  const out = document.getElementById('output');
+  out.className = 'output';
+  if (lastStructured) {
+    out.textContent = structuredToText(currentTool, lastStructured);
+  } else if (currentTool === 'blog' && lastOutput) {
+    out.innerHTML = renderMarkdown(lastOutput);
+  } else {
+    out.textContent = lastOutput;
+  }
+}
+
+function structuredToText(tool, data) {
+  if (tool === 'instagram') {
+    return `${data.hook}\n\n${data.body}\n\n${data.cta}\n\n${data.hashtags.map(h => '#' + h).join(' ')}\n\n[Image idea: ${data.imageIdea}]`;
+  }
+  if (tool === 'ads') {
+    let txt = `FEATURED AD\n\n`;
+    txt += `Headline 1: ${data.featuredAd.headline1} [${data.featuredAd.headline1.length}]\n`;
+    txt += `Headline 2: ${data.featuredAd.headline2} [${data.featuredAd.headline2.length}]\n`;
+    txt += `Headline 3: ${data.featuredAd.headline3} [${data.featuredAd.headline3.length}]\n\n`;
+    txt += `Description 1: ${data.featuredAd.description1} [${data.featuredAd.description1.length}]\n`;
+    txt += `Description 2: ${data.featuredAd.description2} [${data.featuredAd.description2.length}]\n\n`;
+    txt += `Display URL: ${data.featuredAd.displayUrl}\n`;
+    txt += `Sitelinks: ${data.featuredAd.sitelinks.join(' | ')}\n\n`;
+    txt += `ADDITIONAL HEADLINE OPTIONS\n\n`;
+    data.additionalHeadlines.forEach((h, i) => {
+      txt += `${i + 1}. ${h} [${h.length}]\n`;
+    });
+    return txt;
+  }
+  if (tool === 'email') {
+    return `Subject: ${data.subject}\nPreview: ${data.previewText}\nFrom: ${data.fromName} <${data.fromEmail}>\n\n${data.greeting}\n\n${data.body}\n\n${data.cta}\n\n${data.signoff}`;
+  }
+  return lastOutput;
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function renderPreview(tool, data) {
+  const out = document.getElementById('output');
+  out.className = 'preview-shell';
+
+  if (tool === 'instagram') {
+    out.innerHTML = `
+      <div class="preview-label">As it would appear on Instagram</div>
+      <div class="ig-frame">
+        <div class="ig-header">
+          <div class="ig-avatar">P</div>
+          <div class="ig-username">pillarpelvichealth</div>
+        </div>
+        <div class="ig-image">${escapeHtml(data.imageIdea || 'Image goes here')}</div>
+        <div class="ig-actions">
+          <span>♡</span><span>💬</span><span>↗</span>
+        </div>
+        <div class="ig-likes">142 likes</div>
+        <div class="ig-caption"><span class="ig-caption-username">pillarpelvichealth</span>${escapeHtml(data.hook)}
+
+${escapeHtml(data.body)}
+
+${escapeHtml(data.cta)}<span class="ig-hashtags">${(data.hashtags || []).map(h => '#' + escapeHtml(h)).join(' ')}</span></div>
+      </div>
+    `;
+    return;
+  }
+
+  if (tool === 'ads') {
+    const ad = data.featuredAd;
+    const combinedHeadline = `${ad.headline1} | ${ad.headline2} | ${ad.headline3}`;
+    out.innerHTML = `
+      <div class="preview-label">As it would appear in Google search</div>
+      <div class="google-ads-frame">
+        <div class="google-search-bar">
+          <span class="g-logo">Google</span>
+          <span>pelvic floor pt cincinnati</span>
+        </div>
+        <div class="ad-result">
+          <span class="ad-badge">Ad</span><span class="ad-url"><span class="ad-url-domain">www.</span>${escapeHtml(ad.displayUrl)}</span>
+          <div class="ad-headline">${escapeHtml(combinedHeadline)}</div>
+          <div class="ad-description">${escapeHtml(ad.description1)} ${escapeHtml(ad.description2)}</div>
+          <div class="ad-extensions">
+            ${(ad.sitelinks || []).map(s => `<span>${escapeHtml(s)}</span>`).join('')}
+          </div>
+        </div>
+        <div class="headlines-list">
+          <div class="headlines-list-title">Additional headline options for testing</div>
+          ${(data.additionalHeadlines || []).map(h => `<span class="headline-pill">${escapeHtml(h)}<span class="char-count">${h.length}</span></span>`).join('')}
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  if (tool === 'email') {
+    out.innerHTML = `
+      <div class="preview-label">As it would appear in an inbox</div>
+      <div class="email-frame">
+        <div class="email-header">
+          <div class="email-subject">${escapeHtml(data.subject)}</div>
+          <div class="email-preview-text">${escapeHtml(data.previewText)}</div>
+          <div class="email-meta">
+            <div class="avatar">P</div>
+            <div>
+              <div class="from">${escapeHtml(data.fromName)}</div>
+              <div style="font-size:11px;">${escapeHtml(data.fromEmail)}</div>
+            </div>
+          </div>
+        </div>
+        <div class="email-body">${escapeHtml(data.greeting)}
+
+${escapeHtml(data.body)}
+
+${escapeHtml(data.cta)}
+
+${escapeHtml(data.signoff)}</div>
+        <div class="email-footer">
+          Pillar Pelvic Health · Cincinnati, OH · Unsubscribe
+        </div>
+      </div>
+    `;
+    return;
+  }
+}
+
+function regenerate() {
+  const tool = TOOLS[currentTool];
+  tool.fields.forEach(f => {
+    const input = document.getElementById(`field-${f.key}`);
+    if (input && lastFields[f.key] !== undefined) input.value = lastFields[f.key];
+    const pillGroup = document.querySelector(`.pill-group[data-field-key="${f.key}"]`);
+    if (pillGroup && lastFields[f.key]) {
+      pillGroup.querySelectorAll('.pill').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.value === lastFields[f.key]);
+      });
+    }
+  });
+  generate();
+}
+
+function copyOutput() {
+  const textToCopy = lastStructured ? structuredToText(currentTool, lastStructured) : lastOutput;
+  navigator.clipboard.writeText(textToCopy).then(() => {
+    const copyBtn = document.getElementById('copy-btn');
+    const original = copyBtn.textContent;
+    copyBtn.textContent = 'Copied';
+    setTimeout(() => copyBtn.textContent = original, 1500);
+  });
+}
+
+// Initialize
+renderNav();
+renderForm('blog');
+loadBrain();
+</script>
+</body>
+</html>
