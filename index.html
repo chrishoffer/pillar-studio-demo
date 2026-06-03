@@ -376,6 +376,11 @@
     outline: none;
     border-bottom-color: var(--sage);
   }
+  textarea {
+    resize: vertical;
+    line-height: 1.5;
+    min-height: 62px;
+  }
 
   /* Pill option group */
   .pill-group {
@@ -953,7 +958,7 @@
       <h1>Drafts in your <em>voice</em>,<br>in seconds.</h1>
     </div>
     <div class="hero-lede">
-      Choose what you'd like to draft, fill in a few details, and the Studio writes it the way Pillar speaks.
+      Choose what you'd like to draft, fill in a short brief, and the Studio writes it the way Pillar speaks.
     </div>
   </div>
 
@@ -1047,6 +1052,7 @@ const TOOLS = {
     fields: [
       { key: 'topic', label: 'Topic', type: 'input', placeholder: 'e.g. Why postpartum runners need pelvic floor PT', hint: 'What is the blog post about?', required: true },
       { key: 'audience', label: 'Who it\'s for', type: 'input', placeholder: 'e.g. New moms returning to running', hint: 'Optional — who specifically is reading this?' },
+      { key: 'keyPoints', label: 'Key points to hit', type: 'textarea', placeholder: 'e.g. It\'s common but not "normal"\nWhat PT actually does\nWhen to come in', hint: 'Optional — 2–4 things the post should cover (one per line is fine)' },
       {
         key: 'length',
         label: 'Length',
@@ -1090,9 +1096,16 @@ Format in markdown.`;
 
 Topic: ${f.topic}
 ${f.audience ? `Target reader: ${f.audience}` : ''}
+${f.keyPoints ? `Key points to cover:\n${f.keyPoints}` : ''}
 Target length: approximately ${wc} words
 
 ${structure}
+
+WRITING STYLE (important — keep it readable):
+- Front-load the value. The first sentence must earn the next one — no warm-up, no "In today's world," no throat-clearing.
+- Lead each section with its key point in the first sentence. Don't bury the lede.
+- Keep paragraphs short (1-3 sentences) and skimmable. Someone reading only the subheadings and first lines should still get the whole story.
+- Cut filler. Treat the word count as a ceiling, not a target — shorter and tighter is better than padded.
 
 Stay true to Pillar's voice — warm, calm, knowledgeable, plain-language, no hype, no fear-based framing. Never give specific medical advice; frame everything as general education and invite the reader to book a consultation for personalized guidance. Do not use real patient stories.`;
     }
@@ -1105,11 +1118,13 @@ Stay true to Pillar's voice — warm, calm, knowledgeable, plain-language, no hy
     structured: true,
     fields: [
       { key: 'topic', label: 'What\'s the post about?', type: 'input', placeholder: 'e.g. Pelvic floor isn\'t just kegels', hint: 'The core message of the post', required: true },
+      { key: 'keyMessage', label: 'The one thing to land', type: 'input', placeholder: 'e.g. Leaking is common but very treatable', hint: 'Optional — if they remember one line, what is it?' },
       { key: 'cta', label: 'Call to action', type: 'input', placeholder: 'e.g. DM us to book a consult', hint: 'What do you want them to do?' }
     ],
     prompt: (f) => `Write an Instagram caption for Pillar Pelvic Health.
 
 Topic: ${f.topic}
+${f.keyMessage ? `Key takeaway to land: ${f.keyMessage}` : ''}
 CTA: ${f.cta || 'Book a free consultation — link in bio'}
 
 Return ONLY valid JSON in this exact format, no markdown, no preamble:
@@ -1123,19 +1138,43 @@ Return ONLY valid JSON in this exact format, no markdown, no preamble:
 
 Keep total caption length (hook + body + cta) under 200 words. Include 5-8 hashtags without the # symbol.`
   },
-  faq: {
-    label: 'Patient FAQ',
-    title: 'Patient <em>FAQ</em>',
-    desc: 'Reassuring answers',
+  webinar: {
+    label: 'Webinar outline',
+    title: 'Webinar <em>outline</em>',
+    desc: 'Outlines & info sequencing',
     panelNumber: 'No. 03',
     fields: [
-      { key: 'question', label: 'The question', type: 'input', placeholder: 'e.g. Does pelvic floor PT hurt?', hint: 'A real question patients ask', required: true }
+      { key: 'topic', label: 'Webinar topic or working title', type: 'input', placeholder: 'e.g. Pelvic floor health through perimenopause', hint: 'What is the webinar about?', required: true },
+      { key: 'audience', label: 'Who is attending', type: 'input', placeholder: 'e.g. Women 40–55 noticing new symptoms', hint: 'Optional — who is in the room?' },
+      { key: 'takeaways', label: 'What should they walk away with?', type: 'textarea', placeholder: 'e.g. Know what\'s normal vs. worth checking\nKnow the options beyond "just do kegels"\nFeel less alone', hint: 'Optional — 2–4 outcomes attendees should leave with' },
+      {
+        key: 'duration',
+        label: 'Length',
+        type: 'pills',
+        hint: 'How long is the session?',
+        options: [
+          { value: '25', label: '20–30', meta: 'Quick talk' },
+          { value: '45', label: '45 min', meta: 'Standard' },
+          { value: '60', label: '60 min', meta: 'Full session' }
+        ],
+        default: '45'
+      }
     ],
-    prompt: (f) => `Write a clear, reassuring FAQ answer for Pillar Pelvic Health's website.
+    prompt: (f) => `Create a clear, well-sequenced webinar outline for Pillar Pelvic Health.
 
-Question: ${f.question}
+Topic: ${f.topic}
+${f.audience ? `Audience: ${f.audience}` : ''}
+${f.takeaways ? `Desired takeaways:\n${f.takeaways}` : ''}
+Total length: approximately ${f.duration || '45'} minutes
 
-Format: 2-4 short paragraphs. Answer the question directly and honestly. Acknowledge any worry the patient might have. Use plain language. End by inviting them to reach out with more questions or book a consult. Do not give specific medical advice — keep it general and educational.`
+Build the outline so each section sets up the next — proper information sequencing, not a random list of topics. Use this arc:
+1. Open — a hook and why this matters to this audience right now
+2. Frame — context and the common myths/misconceptions to clear up first
+3. Teach — the core content, broken into logical steps that build on each other
+4. Apply — what attendees can actually do with this / what good care looks like
+5. Close — a warm, low-pressure invitation to book a consult, plus time for Q&A
+
+Format in markdown: an H1 title, then H2 section headers each with a rough time allocation in parentheses, and 2–4 bullet sub-points under each. Keep it practical and on-brand. Do not write the full script — just the outline. Never give specific medical advice.`
   },
   ads: {
     label: 'Google Ads',
@@ -1145,12 +1184,14 @@ Format: 2-4 short paragraphs. Answer the question directly and honestly. Acknowl
     structured: true,
     fields: [
       { key: 'focus', label: 'Service or condition', type: 'input', placeholder: 'e.g. Postpartum recovery', hint: 'What is this ad campaign promoting?', required: true },
-      { key: 'angle', label: 'Angle', type: 'input', placeholder: 'e.g. For moms returning to exercise', hint: 'Optional — specific hook or audience angle' }
+      { key: 'angle', label: 'Angle', type: 'input', placeholder: 'e.g. For moms returning to exercise', hint: 'Optional — specific hook or audience angle' },
+      { key: 'audience', label: 'Audience', type: 'input', placeholder: 'e.g. Cincinnati moms 6+ weeks postpartum', hint: 'Optional — who should this reach?' }
     ],
     prompt: (f) => `Generate Google Ads content for Pillar Pelvic Health.
 
 Focus: ${f.focus}
 ${f.angle ? `Angle: ${f.angle}` : ''}
+${f.audience ? `Audience: ${f.audience}` : ''}
 
 Return ONLY valid JSON in this exact format, no markdown, no preamble:
 {
@@ -1184,12 +1225,14 @@ CRITICAL: Every headline must be 30 characters or fewer. Every description must 
     structured: true,
     fields: [
       { key: 'topic', label: 'Newsletter topic', type: 'input', placeholder: 'e.g. Three signs your pelvic floor needs attention', hint: 'Main theme of this email', required: true },
-      { key: 'goal', label: 'Goal of the email', type: 'input', placeholder: 'e.g. Educate + drive consult bookings', hint: 'What should this email accomplish?' }
+      { key: 'goal', label: 'Goal of the email', type: 'input', placeholder: 'e.g. Educate + drive consult bookings', hint: 'What should this email accomplish?' },
+      { key: 'keyPoints', label: 'Key points to include', type: 'textarea', placeholder: 'e.g. The 3 signs\nThat it\'s treatable\nHow to book', hint: 'Optional — anything specific it should mention' }
     ],
     prompt: (f) => `Write a short email newsletter for Pillar Pelvic Health.
 
 Topic: ${f.topic}
 Goal: ${f.goal || 'Educate readers and gently drive consultation bookings'}
+${f.keyPoints ? `Key points to include:\n${f.keyPoints}` : ''}
 
 Return ONLY valid JSON in this exact format, no markdown, no preamble:
 {
@@ -1261,6 +1304,15 @@ function renderForm(toolKey) {
         </div>
       `;
     }
+    if (f.type === 'textarea') {
+      return `
+        <div class="field">
+          <label class="field-label">${f.label}${f.required ? '<span class="req">*</span>' : ''}</label>
+          ${f.hint ? `<div class="field-hint">${f.hint}</div>` : ''}
+          <textarea id="field-${f.key}" rows="3" placeholder="${(f.placeholder || '').replace(/"/g, '&quot;')}"></textarea>
+        </div>
+      `;
+    }
     return `
       <div class="field">
         <label class="field-label">${f.label}${f.required ? '<span class="req">*</span>' : ''}</label>
@@ -1289,11 +1341,11 @@ function selectPill(fieldKey, value) {
 
 function fillExample() {
   const examples = {
-    blog: { topic: 'Why your pelvic floor matters after a C-section', audience: 'New moms 6 weeks postpartum', length: '1000' },
-    instagram: { topic: 'Leaking when you sneeze isn\'t something you have to live with', cta: 'DM us "consult" to learn more' },
-    faq: { question: 'Is pelvic floor PT covered by insurance?' },
-    ads: { focus: 'Postpartum pelvic floor recovery', angle: 'For Cincinnati moms 6+ weeks postpartum' },
-    email: { topic: 'Three things to know about pelvic floor health in your 40s', goal: 'Educate perimenopausal women and invite them to book a consult' }
+    blog: { topic: 'Why your pelvic floor matters after a C-section', audience: 'New moms 6 weeks postpartum', keyPoints: 'A C-section still affects the pelvic floor\nWhat recovery actually looks like\nWhen it\'s worth coming in', length: '1000' },
+    instagram: { topic: 'Leaking when you sneeze isn\'t something you have to live with', keyMessage: 'Leaking is common but very treatable', cta: 'DM us "consult" to learn more' },
+    webinar: { topic: 'Pelvic floor health through perimenopause', audience: 'Women 40–55 noticing new symptoms', takeaways: 'Know what\'s normal vs. worth checking\nKnow the options beyond "just do kegels"\nLeave feeling less alone', duration: '45' },
+    ads: { focus: 'Postpartum pelvic floor recovery', angle: 'For Cincinnati moms 6+ weeks postpartum', audience: 'Cincinnati moms 6+ weeks postpartum' },
+    email: { topic: 'Three things to know about pelvic floor health in your 40s', goal: 'Educate perimenopausal women and invite them to book a consult', keyPoints: 'Symptoms can shift in perimenopause\nIt\'s treatable\nHow to book' }
   };
   const ex = examples[currentTool];
   if (!ex) return;
@@ -1387,8 +1439,8 @@ async function generate() {
     } else {
       lastStructured = null;
       out.className = 'output';
-      // For blog, render markdown lightly
-      if (currentTool === 'blog') {
+      // For blog and webinar, render markdown lightly
+      if (currentTool === 'blog' || currentTool === 'webinar') {
         out.innerHTML = renderMarkdown(text);
       } else {
         out.textContent = text;
@@ -1461,7 +1513,7 @@ function renderRaw() {
   out.className = 'output';
   if (lastStructured) {
     out.textContent = structuredToText(currentTool, lastStructured);
-  } else if (currentTool === 'blog' && lastOutput) {
+  } else if ((currentTool === 'blog' || currentTool === 'webinar') && lastOutput) {
     out.innerHTML = renderMarkdown(lastOutput);
   } else {
     out.textContent = lastOutput;
