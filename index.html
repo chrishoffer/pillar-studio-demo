@@ -1218,35 +1218,69 @@ Return ONLY valid JSON in this exact format, no markdown, no preamble:
 CRITICAL: Every headline must be 30 characters or fewer. Every description must be 90 characters or fewer. Sitelinks must be 25 characters or fewer. Stay calm and professional — no hype, no clickbait. Mix pain-point hooks, benefit-focused, location-specific (Cincinnati), and direct CTAs.`
   },
   email: {
-    label: 'Email newsletter',
-    title: 'Email <em>newsletter</em>',
-    desc: 'Short, warm emails',
+    label: 'Email',
+    title: '<em>Email</em>',
+    desc: 'Newsletters, follow-ups & more',
     panelNumber: 'No. 05',
     structured: true,
     fields: [
-      { key: 'topic', label: 'Newsletter topic', type: 'input', placeholder: 'e.g. Three signs your pelvic floor needs attention', hint: 'Main theme of this email', required: true },
-      { key: 'goal', label: 'Goal of the email', type: 'input', placeholder: 'e.g. Educate + drive consult bookings', hint: 'What should this email accomplish?' },
-      { key: 'keyPoints', label: 'Key points to include', type: 'textarea', placeholder: 'e.g. The 3 signs\nThat it\'s treatable\nHow to book', hint: 'Optional — anything specific it should mention' }
+      { key: 'topic', label: 'What\'s this email about?', type: 'input', placeholder: 'e.g. Last night\'s pelvic floor webinar', hint: 'The subject or occasion of this email', required: true },
+      {
+        key: 'type',
+        label: 'Type of email',
+        type: 'pills',
+        hint: 'This changes the structure and the tone.',
+        options: [
+          { value: 'newsletter', label: 'Newsletter', meta: 'Monthly note' },
+          { value: 'webinar', label: 'Webinar follow-up', meta: 'After an event' },
+          { value: 'announcement', label: 'Announcement', meta: 'Quick heads-up' }
+        ],
+        default: 'newsletter'
+      },
+      { key: 'goal', label: 'Goal of the email', type: 'input', placeholder: 'e.g. Share the replay + invite bookings', hint: 'What should this email accomplish?' },
+      { key: 'keyPoints', label: 'Key points to include', type: 'textarea', placeholder: 'e.g. The replay link\nThe one big takeaway\nHow to book', hint: 'Optional — anything specific it should mention' }
     ],
-    prompt: (f) => `Write a short email newsletter for Pillar Pelvic Health.
+    prompt: (f) => {
+      const type = f.type || 'newsletter';
+      const isWebinar = type === 'webinar';
+      let typeGuidance;
+      if (type === 'webinar') {
+        typeGuidance = `EMAIL TYPE: Webinar follow-up — written AS Michelle, the morning after she ran the session live.
+- Warmer and more personal than a newsletter. First person ("I"), signed by Michelle — not "the Pillar team."
+- Open with a genuine, specific thank-you (great questions, a packed room, a moment that landed) — never a generic "thanks for attending."
+- Restate the ONE most important takeaway in a sentence or two. Do not re-teach the whole webinar.
+- Deliver what was promised — replay, handout, or freebie. Use a clear placeholder like [replay link] if it is not provided.
+- A soft, no-pressure invite to book if something resonated.
+- Keep it short — under 200 words. A genuine exclamation point or one warm emoji belongs here.
+- Sign off personally as Michelle.`;
+      } else if (type === 'announcement') {
+        typeGuidance = `EMAIL TYPE: Announcement — a short, friendly heads-up (new service, schedule change, event, holiday).
+- Get to the point fast. One clear idea, one clear action. Warm but brief — under 120 words.`;
+      } else {
+        typeGuidance = `EMAIL TYPE: Monthly newsletter — a thoughtful note from a friend who happens to be a PT.
+- One clear idea, taught generously but briefly. 3-5 short paragraphs, front-loaded so the value lands early.
+- Warm open, soft invitation to book at the end. Under 250 words.`;
+      }
+      return `Write an email for Pillar Pelvic Health.
 
-Topic: ${f.topic}
+Topic / occasion: ${f.topic}
 Goal: ${f.goal || 'Educate readers and gently drive consultation bookings'}
 ${f.keyPoints ? `Key points to include:\n${f.keyPoints}` : ''}
+
+${typeGuidance}
 
 Return ONLY valid JSON in this exact format, no markdown, no preamble:
 {
   "subject": "Compelling subject line, not clickbait",
   "previewText": "One sentence preview text shown in inbox",
-  "fromName": "The Pillar Team",
+  "fromName": "${isWebinar ? 'Michelle' : 'The Pillar Team'}",
   "fromEmail": "hello@pillarpelvichealth.com",
-  "greeting": "Hi friend,",
-  "body": "3-5 short paragraphs of content separated by blank lines. Conversational, warm, helpful.",
+  "greeting": "Warm greeting line in Pillar's voice",
+  "body": "Short paragraphs separated by blank lines, written for this email type",
   "cta": "Clear but soft call to action sentence",
-  "signoff": "Warmly,\\nThe Pillar Team"
-}
-
-Total length of body + cta should be under 250 words.`
+  "signoff": "${isWebinar ? 'Cheers,\\nMichelle' : 'Warmly,\\nThe Pillar Team'}"
+}`;
+    }
   }
 };
 
@@ -1345,7 +1379,7 @@ function fillExample() {
     instagram: { topic: 'Leaking when you sneeze isn\'t something you have to live with', keyMessage: 'Leaking is common but very treatable', cta: 'DM us "consult" to learn more' },
     webinar: { topic: 'Pelvic floor health through perimenopause', audience: 'Women 40–55 noticing new symptoms', takeaways: 'Know what\'s normal vs. worth checking\nKnow the options beyond "just do kegels"\nLeave feeling less alone', duration: '45' },
     ads: { focus: 'Postpartum pelvic floor recovery', angle: 'For Cincinnati moms 6+ weeks postpartum', audience: 'Cincinnati moms 6+ weeks postpartum' },
-    email: { topic: 'Three things to know about pelvic floor health in your 40s', goal: 'Educate perimenopausal women and invite them to book a consult', keyPoints: 'Symptoms can shift in perimenopause\nIt\'s treatable\nHow to book' }
+    email: { topic: 'Last night\'s pelvic floor webinar', type: 'webinar', goal: 'Share the replay and invite anyone ready to book', keyPoints: 'Thank them for the great questions\nThe takeaway: common doesn\'t mean normal\nReplay + breathing handout\nSoft invite to book' }
   };
   const ex = examples[currentTool];
   if (!ex) return;
